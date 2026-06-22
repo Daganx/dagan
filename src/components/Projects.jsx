@@ -14,7 +14,7 @@ export default function Projects() {
 
         <div className="section__content">
           <p className="projects__intro reveal-item">
-            Sélection de réalisations à venir — les détails seront ajoutés prochainement.
+            Sélection de réalisations à venir —
           </p>
 
           <div className="projects__grid">

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import emailjs from '@emailjs/browser'
 import { profile } from '../data/portfolio'
 import { useStaggerReveal } from '../hooks/useScrollReveal'
 
@@ -31,6 +32,8 @@ export default function Contact() {
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendError, setSendError] = useState(null)
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -48,9 +51,41 @@ export default function Contact() {
       return
     }
 
-    setErrors({})
-    setSubmitted(true)
-    setForm(initialForm)
+    setSending(true)
+    setSendError(null)
+
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+
+    emailjs
+      .send(
+        serviceId,
+        templateId,
+        {
+          name: form.name,
+          lastName: '',
+          topics: '',
+          message: form.message,
+          email: form.email,
+          phoneNumber: '',
+          city: '',
+        },
+        publicKey,
+      )
+      .then(
+        () => {
+          setErrors({})
+          setSubmitted(true)
+          setForm(initialForm)
+          setSending(false)
+        },
+        // eslint-disable-next-line no-unused-vars
+        (error) => {
+          setSendError("L'envoi a échoué. Veuillez réessayer.")
+          setSending(false)
+        },
+      )
   }
 
   return (
@@ -72,10 +107,6 @@ export default function Contact() {
                 <li>
                   <span>Email</span>
                   <a href={`mailto:${profile.email}`}>{profile.email}</a>
-                </li>
-                <li>
-                  <span>Téléphone</span>
-                  <a href={`tel:${profile.phone.replace(/\s/g, '')}`}>{profile.phone}</a>
                 </li>
                 <li>
                   <span>Disponibilité</span>
@@ -129,13 +160,19 @@ export default function Contact() {
                 {errors.message && <span className="form-error">{errors.message}</span>}
               </div>
 
-              <button type="submit" className="btn btn--primary btn--full">
-                Envoyer le message
+              <button type="submit" className="btn btn--primary btn--full" disabled={sending}>
+                {sending ? 'Envoi en cours…' : 'Envoyer le message'}
               </button>
+
+              {sendError && (
+                <p className="form-error" role="status">
+                  {sendError}
+                </p>
+              )}
 
               {submitted && (
                 <p className="form-success" role="status">
-                  Message validé localement. L&apos;envoi sera activé prochainement.
+                  Message envoyé avec succès ! Je vous répondrai sous 48h.
                 </p>
               )}
             </form>
